@@ -10,6 +10,28 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func GetAllDepartment(c *gin.Context) {
+	var departments []models.Department
+
+	err := database.DB.
+		Preload("Division").
+		Find(&departments).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": "Failed get departments",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, structs.SuccessResponse{
+		Success: true,
+		Message: "Get All Departments",
+		Data:    departments,
+	})
+}
+
 func ShowDepartmentByDivision(c *gin.Context) {
 	branchId := c.Param("id")
 	divisionId := c.Param("divisionId")

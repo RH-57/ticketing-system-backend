@@ -35,6 +35,11 @@ func SetupRouter() *gin.Engine {
 				users.DELETE("/:id", controllers.DeleteUser)
 			}
 
+			departments := admin.Group("/departments")
+			{
+				departments.GET("", controllers.GetAllDepartment)
+			}
+
 			branches := admin.Group("/branches")
 			{
 				branches.GET("", controllers.ShowBranches)

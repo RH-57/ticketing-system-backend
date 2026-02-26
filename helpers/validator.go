@@ -8,38 +8,37 @@ import (
 	"gorm.io/gorm"
 )
 
-func TranslateErrorMessage(err error) map[string]string {
-	errorsMap := make(map[string]string)
+func TranslateErrorMessage(err error) map[string][]string {
+	errorsMap := make(map[string][]string)
 
 	if validationErrors, ok := err.(validator.ValidationErrors); ok {
 		for _, fieldError := range validationErrors {
-			field := fieldError.Field()
+			field := strings.ToLower(fieldError.Field())
+
 			switch fieldError.Tag() {
 			case "required":
-				errorsMap[field] = fmt.Sprintf("%s is required", field)
+				errorsMap[field] = append(errorsMap[field], fmt.Sprintf("%s is required", field))
 			case "email":
-				errorsMap[field] = "Invalid email format"
+				errorsMap[field] = append(errorsMap[field], "Invalid email format")
 			case "unique":
-				errorsMap[field] = fmt.Sprintf("%s already exists", field)
+				errorsMap[field] = append(errorsMap[field], fmt.Sprintf("%s already exists", field))
 			case "min":
-				errorsMap[field] = fmt.Sprintf("%s must be at least %s characters", field, fieldError.Param())
+				errorsMap[field] = append(errorsMap[field], fmt.Sprintf("%s must be at least %s characters", field, fieldError.Param()))
 			case "max":
-				errorsMap[field] = fmt.Sprintf("%s must be at most %s characters", field, fieldError.Param())
+				errorsMap[field] = append(errorsMap[field], fmt.Sprintf("%s must be at most %s characters", field, fieldError.Param()))
 			case "numeric":
-				errorsMap[field] = fmt.Sprintf("%s must be a number", field)
+				errorsMap[field] = append(errorsMap[field], fmt.Sprintf("%s must be a number", field))
 			default:
-				errorsMap[field] = "Invalid Value"
+				errorsMap[field] = append(errorsMap[field], "Invalid value")
 			}
 		}
 	}
 
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
-			if strings.Contains(err.Error(), "email") {
-				errorsMap["Email"] = "Email already exists"
-			}
+			errorsMap["email"] = append(errorsMap["email"], "Email already exists")
 		} else if err == gorm.ErrRecordNotFound {
-			errorsMap["Error"] = "Record Not Found"
+			errorsMap["error"] = append(errorsMap["error"], "Record not found")
 		}
 	}
 

@@ -11,9 +11,9 @@ type CategoryResponse struct {
 }
 
 type CategoryCreateRequest struct {
-	Name string `json:"name" binding:"required"`
+	Name string `json:"name" binding:"required,min=1"`
 }
 
 type CategoryUpdateRequest struct {
-	Name string `json:"name" binding:"required"`
+	Name string `json:"name" binding:"required,min=1"`
 }

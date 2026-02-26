@@ -25,7 +25,7 @@ type UserUpdateRequest struct {
 	Name     string `json:"name" binding:"required"`
 	Username string `json:"username" binding:"required"`
 	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password,omitempty,min=6"`
+	Password string `json:"password,omitempty" binding:"min=6"`
 	Avatar   string `json:"avatar,omitempty"`
 	IsActive *bool  `json:"is_active,omitempty"`
 	Role     string `json:"role,omitempty"`

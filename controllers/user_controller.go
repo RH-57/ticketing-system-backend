@@ -201,3 +201,74 @@ func DeleteUser(c *gin.Context) {
 		Message: "User deleted successfully",
 	})
 }
+
+func ChangePassword(c *gin.Context) {
+
+	var user models.User
+	var req structs.ChangePasswordRequest
+
+	// 🔥 1️⃣ Ambil user_id dari JWT
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, structs.ErrorResponse{
+			Success: false,
+			Message: "Unauthorized",
+		})
+		return
+	}
+
+	// 2️⃣ Cari user
+	if err := database.DB.First(&user, userId).Error; err != nil {
+		c.JSON(http.StatusNotFound, structs.ErrorResponse{
+			Success: false,
+			Message: "User not found",
+		})
+		return
+	}
+
+	// 3️⃣ Bind JSON
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, structs.ErrorResponse{
+			Success: false,
+			Message: "Validation Error",
+			Errors:  helpers.TranslateErrorMessage(err),
+		})
+		return
+	}
+
+	// 4️⃣ Check current password
+	if !helpers.CheckPasswordHash(req.CurrentPassword, user.Password) {
+		c.JSON(http.StatusBadRequest, structs.ErrorResponse{
+			Success: false,
+			Message: "Current password is incorrect",
+		})
+		return
+	}
+
+	// 🔥 Optional security: jangan boleh sama dengan password lama
+	if helpers.CheckPasswordHash(req.NewPassword, user.Password) {
+		c.JSON(http.StatusBadRequest, structs.ErrorResponse{
+			Success: false,
+			Message: "New password cannot be same as old password",
+		})
+		return
+	}
+
+	// 5️⃣ Hash password baru
+	user.Password = helpers.HashPassword(req.NewPassword)
+
+	// 6️⃣ Save
+	if err := database.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, structs.ErrorResponse{
+			Success: false,
+			Message: "Failed to change password",
+		})
+		return
+	}
+
+	// 7️⃣ Response
+	c.JSON(http.StatusOK, structs.SuccessResponse{
+		Success: true,
+		Message: "Password changed successfully",
+	})
+}

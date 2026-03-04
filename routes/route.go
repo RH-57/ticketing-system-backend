@@ -33,6 +33,7 @@ func SetupRouter() *gin.Engine {
 				users.GET("/:id", controllers.FindUserById)
 				users.PUT("/:id", controllers.UpdateUser)
 				users.DELETE("/:id", controllers.DeleteUser)
+				users.PUT("/change-password", controllers.ChangePassword)
 			}
 
 			departments := admin.Group("/departments")

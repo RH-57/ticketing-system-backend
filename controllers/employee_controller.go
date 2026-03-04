@@ -12,17 +12,86 @@ import (
 
 func ShowEmployees(c *gin.Context) {
 	var employees []models.Employee
+	var total int64
 
-	database.DB.
+	page := c.DefaultQuery("page", "1")
+	perPage := c.DefaultQuery("per_page", "10")
+
+	pageInt := helpers.StringToInt(page)
+	perPageInt := helpers.StringToInt(perPage)
+
+	if pageInt <= 0 {
+		pageInt = 1
+	}
+	if perPageInt <= 0 {
+		perPageInt = 10
+	}
+
+	offset := (pageInt - 1) * perPageInt
+
+	query := database.DB.Model(&models.Employee{})
+	query.Count(&total)
+
+	if err := database.DB.
 		Preload("Branch").
 		Preload("Division").
 		Preload("Department").
-		Find(&employees)
+		Order("created_at DESC"). // 🔥 INI TAMBAHAN
+		Limit(perPageInt).
+		Offset(offset).
+		Find(&employees).Error; err != nil {
 
-	c.JSON(http.StatusOK, structs.SuccessResponse{
+		c.JSON(http.StatusInternalServerError, structs.ErrorResponse{
+			Success: false,
+			Message: "Failed to fetch employees",
+		})
+		return
+	}
+
+	var response []structs.EmployeeResponse
+
+	for _, e := range employees {
+		response = append(response, structs.EmployeeResponse{
+			ID:   e.ID,
+			Name: e.Name,
+			Branch: struct {
+				ID   uint   `json:"id"`
+				Name string `json:"name"`
+			}{
+				ID:   e.Branch.ID,
+				Name: e.Branch.Name,
+			},
+			Division: struct {
+				ID   uint   `json:"id"`
+				Name string `json:"name"`
+			}{
+				ID:   e.Division.ID,
+				Name: e.Division.Name,
+			},
+			Department: struct {
+				ID   uint   `json:"id"`
+				Name string `json:"name"`
+			}{
+				ID:   e.Department.ID,
+				Name: e.Department.Name,
+			},
+			CreatedAt: e.CreatedAt,
+			UpdatedAt: e.UpdatedAt,
+		})
+	}
+
+	lastPage := int((total + int64(perPageInt) - 1) / int64(perPageInt))
+
+	c.JSON(http.StatusOK, structs.PaginatedResponse{
 		Success: true,
-		Message: "List all employees",
-		Data:    employees,
+		Message: "List employees",
+		Data:    response,
+		Meta: structs.PaginationMeta{
+			CurrentPage: pageInt,
+			PerPage:     perPageInt,
+			Total:       total,
+			LastPage:    lastPage,
+		},
 	})
 }
 

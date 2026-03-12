@@ -17,6 +17,7 @@ func ShowTickets(c *gin.Context) {
 
 	err := database.DB.
 		Preload("Employee").
+		Preload("User").
 		Order("created_at DESC").
 		Find(&tickets).Error
 
@@ -38,6 +39,7 @@ func ShowTickets(c *gin.Context) {
 			Priority:     string(t.Priority),
 			Status:       string(t.Status),
 			EmployeeName: t.Employee.Name,
+			CreatedBy:    t.User.Name,
 		})
 	}
 
@@ -223,6 +225,7 @@ func UpdateTicket(c *gin.Context) {
 	ticket.Description = req.Description
 	ticket.Priority = models.TicketPriority(req.Priority)
 	ticket.Status = models.TicketStatus(req.Status)
+	ticket.EmployeeID = req.EmployeeID
 
 	if err := database.DB.Save(&ticket).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, structs.ErrorResponse{

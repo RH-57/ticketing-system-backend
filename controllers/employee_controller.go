@@ -16,6 +16,8 @@ func ShowEmployees(c *gin.Context) {
 
 	page := c.DefaultQuery("page", "1")
 	perPage := c.DefaultQuery("per_page", "10")
+	// 🔥 TAMBAHAN: Ambil query search dari URL (?search=nama)
+	search := c.Query("search")
 
 	pageInt := helpers.StringToInt(page)
 	perPageInt := helpers.StringToInt(perPage)
@@ -29,17 +31,24 @@ func ShowEmployees(c *gin.Context) {
 
 	offset := (pageInt - 1) * perPageInt
 
+	// Bangun Query Base
 	query := database.DB.Model(&models.Employee{})
+
+	// 🔥 TAMBAHAN: Jika ada parameter search, filter berdasarkan Nama
+	if search != "" {
+		query = query.Where("LOWER(name) LIKE LOWER(?)", "%"+search+"%")
+	}
+
 	query.Count(&total)
 
-	if err := database.DB.
-		Preload("Branch").
-		Preload("Division").
-		Preload("Department").
-		Order("created_at DESC"). // 🔥 INI TAMBAHAN
-		Limit(perPageInt).
-		Offset(offset).
-		Find(&employees).Error; err != nil {
+	if err := query. // Gunakan objek query yang sudah difilter search tadi
+				Preload("Branch").
+				Preload("Division").
+				Preload("Department").
+				Order("created_at DESC").
+				Limit(perPageInt).
+				Offset(offset).
+				Find(&employees).Error; err != nil {
 
 		c.JSON(http.StatusInternalServerError, structs.ErrorResponse{
 			Success: false,

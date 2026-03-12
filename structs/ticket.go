@@ -7,6 +7,7 @@ type TicketListResponse struct {
 	Priority     string `json:"priority"`
 	EmployeeName string `json:"employee_name"`
 	Status       string `json:"status"`
+	CreatedBy    string `json:"created_by"`
 }
 
 type TicketDetailResponse struct {
@@ -23,8 +24,8 @@ type TicketDetailResponse struct {
 	} `json:"employee"`
 
 	CreatedBy struct {
-		ID    uint   `json:"id"`
-		Email string `json:"email"`
+		ID   uint   `json:"id"`
+		Name string `json:"name"`
 	} `json:"created_by"`
 
 	Branch     string `json:"branch"`

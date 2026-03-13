@@ -51,3 +51,7 @@ type TicketUpdateRequest struct {
 	Status   string `json:"status" binding:"required,oneof=OPEN PROCESS PENDING CLOSED"`
 	Priority string `json:"priority" binding:"required,oneof=LOW MEDIUM HIGH CRITICAL"`
 }
+
+type TicketUpdateStatusRequest struct {
+	Status string `json:"status" binding:"required,oneof=OPEN PROCESS PENDING CLOSED"`
+}

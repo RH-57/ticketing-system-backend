@@ -12,7 +12,7 @@ func SetupRouter() *gin.Engine {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowOrigins:     []string{"http://localhost:5173", "http://192.168.1.185:5173"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -26,6 +26,11 @@ func SetupRouter() *gin.Engine {
 
 		admin := api.Group("", middlewares.AuthMiddleware())
 		{
+			dashboard := admin.Group("/dashboard")
+			{
+				dashboard.GET("/stats", controllers.GetDashboardStats)
+			}
+
 			users := admin.Group("/users")
 			{
 				users.GET("", controllers.ShowUsers)
@@ -96,8 +101,15 @@ func SetupRouter() *gin.Engine {
 				tickets.POST("", controllers.CreateTicket)
 				tickets.GET("/:ticket_number", controllers.ShowTicketDetail)
 				tickets.PUT("/:ticket_number", controllers.UpdateTicket)
+				tickets.PUT("/:ticket_number/status", controllers.UpdateTicketStatus)
 				tickets.DELETE("/:ticket_number", controllers.DeleteTicket)
 				tickets.GET("/actives", controllers.ShowActiveTickets)
+			}
+
+			comments := admin.Group("/comments")
+			{
+				// Karena TicketID dikirim via JSON body (sesuai struct), kita cukup gunakan POST /api/comments
+				comments.POST("", controllers.CreateCommentAndCloseTicket)
 			}
 		}
 	}

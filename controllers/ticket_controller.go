@@ -191,6 +191,53 @@ func ShowTicketDetail(c *gin.Context) {
 	})
 }
 
+func UpdateTicketStatus(c *gin.Context) {
+	ticketNumber := c.Param("ticket_number")
+
+	var req structs.TicketUpdateStatusRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, structs.ErrorResponse{
+			Success: false,
+			Message: "Validation Error",
+			Errors:  helpers.TranslateErrorMessage(err),
+		})
+		return
+	}
+
+	var ticket models.Ticket
+
+	if err := database.DB.
+		Where("ticket_number = ?", ticketNumber).
+		First(&ticket).Error; err != nil {
+
+		c.JSON(http.StatusNotFound, structs.ErrorResponse{
+			Success: false,
+			Message: "Ticket Not Found",
+			Errors:  helpers.TranslateErrorMessage(err),
+		})
+		return
+	}
+
+	if err := database.DB.Model(&ticket).
+		Update("status", models.TicketStatus(req.Status)).Error; err != nil {
+
+		c.JSON(http.StatusInternalServerError, structs.ErrorResponse{
+			Success: false,
+			Message: "Failed to update ticket status",
+		})
+		return
+	}
+
+	ticket.Status = models.TicketStatus(req.Status)
+
+	c.JSON(http.StatusOK, structs.SuccessResponse{
+		Success: true,
+		Message: "Ticket status updated successfully",
+		Data:    ticket,
+	})
+}
+
 func UpdateTicket(c *gin.Context) {
 	ticketNumber := c.Param("ticket_number")
 

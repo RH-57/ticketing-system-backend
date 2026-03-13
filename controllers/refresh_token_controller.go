@@ -61,7 +61,6 @@ func RefreshToken(c *gin.Context) {
 	})
 
 	// 8️⃣ Set cookie baru (IMPORTANT)
-	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(
 		"refresh_token",
 		newRefresh,

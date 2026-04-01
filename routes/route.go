@@ -3,6 +3,7 @@ package routes
 import (
 	"backend-golang-api/controllers"
 	"backend-golang-api/middlewares"
+	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -18,6 +19,13 @@ func SetupRouter() *gin.Engine {
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
+
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "success",
+			"message": "Service is up and running!",
+		})
+	})
 
 	api := router.Group("/api")
 	{

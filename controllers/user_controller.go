@@ -129,6 +129,39 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
+	var emailCount int64
+	database.DB.Model(&models.User{}).
+		Where("email = ? AND id != ?", req.Email, user.ID).
+		Count(&emailCount)
+
+	if emailCount > 0 {
+		c.JSON(http.StatusBadRequest, structs.ErrorResponse{
+			Success: false,
+			Message: "Failed to update user",
+			Errors: map[string][]string{
+				"email": {"Email sudah digunakan oleh pengguna lain"},
+			},
+		})
+		return
+	}
+
+	// 2️⃣ Cek apakah Username digunakan oleh user LAIN
+	var usernameCount int64
+	database.DB.Model(&models.User{}).
+		Where("username = ? AND id != ?", req.Username, user.ID).
+		Count(&usernameCount)
+
+	if usernameCount > 0 {
+		c.JSON(http.StatusBadRequest, structs.ErrorResponse{
+			Success: false,
+			Message: "Failed to update user",
+			Errors: map[string][]string{
+				"username": {"Username sudah digunakan oleh pengguna lain"},
+			},
+		})
+		return
+	}
+
 	// 3️⃣ Update field
 	user.Name = req.Name
 	user.Username = req.Username
